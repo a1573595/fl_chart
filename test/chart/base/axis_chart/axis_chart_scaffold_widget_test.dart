@@ -478,6 +478,34 @@ void main() {
       },
     );
 
+    testWidgets('clips its output to widget bounds', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: SizedBox(
+                width: viewSize.width,
+                height: viewSize.height,
+                child: AxisChartScaffoldWidget(
+                  data: lineChartDataWithNoTitles,
+                  chartBuilder: (context, chartVirtualRect) => dummyChart,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final clipRectFinder = find.ancestor(
+        of: find.byKey(dummyChartKey),
+        matching: find.byType(ClipRect),
+      );
+      expect(clipRectFinder, findsOneWidget);
+
+      final clipRect = tester.widget<ClipRect>(clipRectFinder);
+      expect(clipRect.clipBehavior, Clip.hardEdge);
+    });
+
     testWidgets('passes interaction parameters to interactive viewer',
         (tester) async {
       Future<void> pumpTestWidget(AxisChartScaffoldWidget widget) async {
