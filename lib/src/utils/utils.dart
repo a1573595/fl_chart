@@ -216,7 +216,7 @@ class Utils {
       return 8;
     } else if (value >= 0.00000001) {
       return 9;
-    } else if (value >= 0.000000001) {
+    } else if (value > 0) {
       return 10;
     }
     return 1;
@@ -228,8 +228,15 @@ class Utils {
   /// if number is larger than [million], it returns a short number line 43M,
   /// if number is larger than [kilo], it returns a short number like 4K,
   /// otherwise it returns number itself.
-  /// also it removes .0, at the end of number for simplicity.
-  String formatNumber(double axisMin, double axisMax, double axisValue) {
+  /// Fraction digits follow the smaller of [interval] (the gap between
+  /// adjacent titles) and the axis range, so adjacent titles never collapse
+  /// into the same text. Trailing zeros are removed.
+  String formatNumber(
+    double axisMin,
+    double axisMax,
+    double axisValue, {
+    double? interval,
+  }) {
     final isNegative = axisValue < 0;
 
     if (isNegative) {
@@ -237,32 +244,31 @@ class Utils {
     }
 
     final diff = (axisMin - axisMax).abs();
+    final step = math.min(diff, interval ?? diff);
 
     String resultNumber;
     String symbol;
     if (axisValue >= billion) {
       resultNumber = (axisValue / billion)
-          .toStringAsFixed(getFractionDigits(diff / billion));
+          .toStringAsFixed(getFractionDigits(step / billion));
       symbol = 'B';
     } else if (axisValue >= million) {
       resultNumber = (axisValue / million)
-          .toStringAsFixed(getFractionDigits(diff / million));
+          .toStringAsFixed(getFractionDigits(step / million));
       symbol = 'M';
     } else if (axisValue >= kilo) {
       resultNumber =
-          (axisValue / kilo).toStringAsFixed(getFractionDigits(diff / kilo));
+          (axisValue / kilo).toStringAsFixed(getFractionDigits(step / kilo));
       symbol = 'K';
     } else {
       resultNumber = axisValue.toStringAsFixed(
-        getFractionDigits(diff),
+        getFractionDigits(step),
       );
       symbol = '';
     }
 
     if (resultNumber.contains('.')) {
-      resultNumber = resultNumber
-          .replaceAll(RegExp(r'0+$'), '')
-          .replaceAll(RegExp(r'\.$'), '');
+      resultNumber = resultNumber.replaceFirst(RegExp(r'\.?0+$'), '');
     }
 
     if (isNegative) {

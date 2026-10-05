@@ -203,6 +203,8 @@ void main() {
     expect(Utils().getFractionDigits(0.000001), 7);
     expect(Utils().getFractionDigits(0.0000001), 8);
     expect(Utils().getFractionDigits(0.00000001), 9);
+    expect(Utils().getFractionDigits(0.0000000001), 10);
+    expect(Utils().getFractionDigits(0), 1);
   });
 
   test('test formatNumber', () {
@@ -257,6 +259,33 @@ void main() {
     expect(Utils().formatNumber(0, 5000000, 2345123), '2.3M');
     expect(Utils().formatNumber(0, 5000, 1234), '1.2K');
     expect(Utils().formatNumber(0, 5000000000, 4324512345), '4.3B');
+    expect(Utils().formatNumber(min, max, 1100000), '1.1M');
+  });
+
+  test('test formatNumber derives fraction digits from interval (#1584)', () {
+    // Titles spaced finer than the axis range precision must stay distinct.
+    const min = 976405.27;
+    const max = 1135594.31;
+    expect(Utils().formatNumber(min, max, 1000000, interval: 5000), '1M');
+    expect(Utils().formatNumber(min, max, 1005000, interval: 5000), '1.005M');
+    expect(Utils().formatNumber(min, max, 985000, interval: 5000), '985K');
+    expect(Utils().formatNumber(0, 1, 0.05, interval: 0.05), '0.05');
+
+    // An interval wider than the axis range falls back to the range.
+    expect(
+      Utils().formatNumber(1000000, 1001000, 1001000, interval: 5000000),
+      '1.001M',
+    );
+
+    expect(
+      Utils().formatNumber(
+        1000000000,
+        1000000001,
+        1000000000.1,
+        interval: 0.1,
+      ),
+      '1.0000000001B',
+    );
   });
 
   group('test getThemeAwareTextStyle', () {
